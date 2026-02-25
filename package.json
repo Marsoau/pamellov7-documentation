@@ -1,0 +1,8 @@
+{
+  "name": "pamello-documentation-solution",
+  "private": true,
+  "workspaces":[
+    "pamellov7-documentation",
+    "pamellov7-wrapper"
+  ]
+}
