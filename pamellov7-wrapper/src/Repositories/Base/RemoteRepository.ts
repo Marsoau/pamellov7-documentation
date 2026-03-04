@@ -19,8 +19,7 @@ export abstract class RemoteRepository<TEntityType extends IRemoteEntity> {
         this._requests = requests;
         this._loaded =[];
         this.entityType = entityType;
-        
-        // Read the "Attributes" from the static properties of the class
+
         this.providerName = entityType.providerName;
         this.remoteInterfaceName = entityType.remoteInterfaceName;
         this.dtoType = entityType.dtoType;
@@ -34,11 +33,9 @@ export abstract class RemoteRepository<TEntityType extends IRemoteEntity> {
         let entity = this.getSingle(dto.id);
         if (entity) return entity;
 
-        // TS EQUIVALENT of Activator.CreateInstance(typeof(TEntityType), dto)
         entity = new this.entityType(dto); 
-        
         if (!entity) throw new Error(`Could not create instance of ${this.entityType.name}`);
-        
+
         this._loaded.push(entity);
         return entity;
     }
@@ -47,21 +44,20 @@ export abstract class RemoteRepository<TEntityType extends IRemoteEntity> {
         return this._loaded.find(x => x.Id === id) ?? null;
     }
 
-    // TS Overloading to handle both 'int' and 'string'
     public async getSingleAsync(id: number): Promise<TEntityType | null>;
     public async getSingleAsync(query: string): Promise<TEntityType | null>;
     public async getSingleAsync(idOrQuery: number | string): Promise<TEntityType | null> {
         if (typeof idOrQuery === 'number') {
             const entity = this.getSingle(idOrQuery);
             if (entity) return entity;
-            return await this.getSingleAsync(idOrQuery.toString()); // Calls string overload internally
+
+            return await this.getSingleAsync(idOrQuery.toString());
         }
 
-        // It's a string query
         const result = await this._requests.getEntitiesAsync(this.dtoType, `${this.providerName}$${idOrQuery}`);
         const firstDto = result[0];
         if (!firstDto) return null;
-        
+
         return this.load(firstDto);
     }
 
@@ -70,30 +66,25 @@ export abstract class RemoteRepository<TEntityType extends IRemoteEntity> {
         return results.map(dto => this.load(dto));
     }
 
-    // --- The part that got cut off ---
-
     public async getIdsAsync(query: string): Promise<number[]> {
         return await this._requests.getEntitiesIdsAsync(`${this.providerName}$${query}`);
     }
 
-    // --- Wrapper Methods ---
-
     public getSingleRequired(id: number): TEntityType {
         const entity = this.getSingle(id);
-        // Swap 'Error' with 'PamelloException' if you imported it
         if (!entity) throw new Error(`${this.entityType.name} with id ${id} not found`); 
+
         return entity;
     }
 
     public async getSingleRequiredAsync(id: number): Promise<TEntityType> {
         const entity = await this.getSingleAsync(id);
         if (!entity) throw new Error(`${this.entityType.name} with id ${id} not found`);
+
         return entity;
     }
 
     public clearCache(): void {
-        // In TypeScript/JavaScript, setting length to 0 is the exact equivalent of C#'s .Clear()
-        // It empties the array in-memory while keeping the same reference.
         this._loaded.length = 0; 
     }
 }

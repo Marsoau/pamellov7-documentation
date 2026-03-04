@@ -1,5 +1,6 @@
 "use client"
 
+import { RemoteUser } from "pamellov7-wrapper";
 import { useAuthorizationState, useConnectionState, usePamello } from "pamellov7-wrapper/hooks";
 import { useEffect, useState } from "react";
 
@@ -20,15 +21,14 @@ export default function Home() {
 		const a = async () => {
 			console.log("asynctest");
 			console.log(pamello.users);
-			var result = await pamello.users.getSingleAsync(1);
-			var result2 = await pamello.users.getSingleAsync(2);
+			var result = await pamello.peql.getAsync(RemoteUser, "me");
+			var result2 = pamello.users.getSingle(1);
 			if (!result) {
 				console.log("no result");
 				return
 			}
-			console.log(result === result2);
-			console.log(result.Name);
 			console.log(result);
+			console.log(result2);
 		}
 
 		a();
