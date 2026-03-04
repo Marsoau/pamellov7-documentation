@@ -9,10 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "eventemitter3": "^5.0.4",
     "next": "16.1.6",
+    "pamellov7-wrapper": "0.0.1",
     "react": "19.2.3",
-    "react-dom": "19.2.3",
-	"pamellov7-wrapper": "0.0.1"
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
