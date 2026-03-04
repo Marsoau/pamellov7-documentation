@@ -1,11 +1,11 @@
-import { PamelloRequests } from "./PamelloRequests";
-import { PamelloSignal } from "./PamelloSignal";
+import { PamelloRequestsService } from "../Requests/PamelloRequestsService";
+import { PamelloSignalService } from "../Signal/PamelloSignalService";
 
-export class PamelloCommands {
-	private readonly _requests: PamelloRequests;
-	private readonly _signal?: PamelloSignal;
+export class PamelloCommandsService {
+	private readonly _requests: PamelloRequestsService;
+	private readonly _signal?: PamelloSignalService;
 
-	constructor(requests: PamelloRequests, signal?: PamelloSignal) {
+	constructor(requests: PamelloRequestsService, signal?: PamelloSignalService) {
 		this._requests = requests;
 		this._signal = signal;
 	}

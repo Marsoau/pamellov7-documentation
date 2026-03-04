@@ -1,12 +1,12 @@
 import { request } from "http";
-import { PamelloConfig } from "../Config/PamelloConfig";
 import { UserRequiredError } from "../Errors/UserRequiredError";
-import { IPamelloCommandInvoker } from "./IPamelloCommandInvoker";
+import { IPamelloCommandInvoker } from "../Commands/IPamelloCommandInvoker";
+import { PamelloClientConfig } from "../Config/PamelloClientConfig";
 
-export class PamelloRequests implements IPamelloCommandInvoker {
-	private readonly _config: PamelloConfig;
+export class PamelloRequestsService implements IPamelloCommandInvoker {
+	private readonly _config: PamelloClientConfig;
 
-	constructor(config: PamelloConfig) {
+	constructor(config: PamelloClientConfig) {
 		this._config = config;
 	}
 
