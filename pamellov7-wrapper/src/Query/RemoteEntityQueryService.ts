@@ -49,6 +49,13 @@ export class RemoteEntityQueryService extends AbstractRemoteEntityQueryService {
         throw new Error("Not implemented");
     }
 
+    public getSingleByInterfaceName(interfaceName: string, id: number): IRemoteEntity | null {
+        const repo = this._repositories.find(r => r.remoteInterfaceName === interfaceName);
+        if (!repo) return null;
+
+        return repo.getSingle(id);
+    }
+
     public clearCache(): void {
         for (const repository of this._repositories) {
             repository.clearCache();

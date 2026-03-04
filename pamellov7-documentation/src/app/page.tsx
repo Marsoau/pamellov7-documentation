@@ -19,16 +19,17 @@ export default function Home() {
 		console.log("done");
 
 		const a = async () => {
-			console.log("asynctest");
-			console.log(pamello.users);
-			var result = await pamello.peql.getAsync(RemoteUser, "me");
-			var result2 = pamello.users.getSingle(1);
+			var result = await pamello.peql.getSingleAsync(RemoteUser, "me");
 			if (!result) {
 				console.log("no result");
 				return
 			}
+
+			pamello.events.watch(() => {
+				console.log("change");
+			}, () => [result]);
+
 			console.log(result);
-			console.log(result2);
 		}
 
 		a();

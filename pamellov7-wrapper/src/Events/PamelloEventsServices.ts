@@ -1,14 +1,119 @@
+import { IRemoteEntity } from "../Entities/Base/IRemoteEntity";
 import { PamelloClient } from "../PamelloClient";
 import { ReceivedEventJsonDto } from "./Other/RecievedEventJsonDto";
 
-export class PamelloEventsService {
-	private readonly client: PamelloClient
+export class UpdateSubscription {
+	constructor(
+		public handler: () => Promise<void> | void,
+		public watchedEntities: () => (IRemoteEntity | null | undefined)[]
+	) {}
+
+	public async invokeAsync(): Promise<void> {
+		await this.handler();
+	}
+}
+
+export interface EventSubscription {
+	eventName: string; // E.g., "SongAddedEvent"
+	handler: (ev: any) => void;
+}
+
+export class RemoteEventsService {
+	private readonly _client: PamelloClient;
+
+	private readonly _eventSubscriptions: EventSubscription[] =[];
+	private readonly _updateSubscriptions: UpdateSubscription[] =[];
+
+	// In JS, we process background queues like this:
+	private readonly _updateTasks: (() => Promise<void>)[] =[];
+	private _isProcessingUpdates = false;
 
 	constructor(client: PamelloClient) {
-		this.client = client;
+		this._client = client;
+	}
+
+	private async processUpdates() {
+		if (this._isProcessingUpdates) return;
+		this._isProcessingUpdates = true;
+
+		while (this._updateTasks.length > 0) {
+			const task = this._updateTasks.shift();
+			if (task) {
+				try { await task(); } catch (e) { console.error("Update task failed", e); }
+			}
+		}
+		this._isProcessingUpdates = false;
+	}
+
+	public watch(handler: () => Promise<void> | void, watchedEntities: () => (IRemoteEntity | null | undefined)[]): UpdateSubscription {
+		const subscription = new UpdateSubscription(handler, watchedEntities);
+		this._updateSubscriptions.push(subscription);
+		return subscription;
+	}
+
+	public subscribe(eventName: string, handler: (ev: any) => void): EventSubscription {
+		const subscription: EventSubscription = { eventName, handler };
+		this._eventSubscriptions.push(subscription);
+		return subscription;
+	}
+
+	protected updateFromEvent(eventDto: ReceivedEventJsonDto, ev: any) {
+		for (const typeInfo of eventDto.Types) {
+			if (!typeInfo.EntityTypeName) continue;
+
+			const id = ev[typeInfo.EntityPropertyName];
+			if (typeof id !== 'number') continue;
+
+			const parts = typeInfo.UpdatePropertyName.split('.');
+			const lastPart = parts[parts.length - 1];
+
+			const newValue = ev[lastPart];
+
+			const entity = this._client.peql.getSingleByInterfaceName(typeInfo.EntityTypeName, id);
+			if (!entity) continue;
+
+			let propertyOwner: any = (entity as any).Dto; // Assuming entity has a 'dto' property
+
+			if (!propertyOwner) continue;
+
+			let isValidPath = true;
+			for (let i = 0; i < parts.length - 1; i++) {
+				propertyOwner = propertyOwner[parts[i]];
+				if (propertyOwner === undefined || propertyOwner === null) {
+					isValidPath = false;
+					break;
+				}
+			}
+
+			if (!isValidPath) continue;
+
+			propertyOwner[lastPart] = newValue;
+
+			for (const subscription of this._updateSubscriptions) {
+				const watched = subscription.watchedEntities();
+				if (watched.includes(entity)) {
+					this._updateTasks.push(() => subscription.invokeAsync());
+					this.processUpdates();
+				}
+			}
+		}
 	}
 
 	public invoke(eventDto: ReceivedEventJsonDto) {
-		//console.log(eventDto);
+		const ev = eventDto.Data;
+		if (!ev) return;
+
+		this.updateFromEvent(eventDto, ev);
+
+		const primaryType = eventDto.Types[0];
+		if (primaryType) {
+			const eventName = primaryType.Name;
+
+			for (const subscription of this._eventSubscriptions) {
+				if (subscription.eventName === eventName || subscription.eventName === "*") {
+					subscription.handler(ev);
+				}
+			}
+		}
 	}
 }

@@ -1,11 +1,11 @@
 import { EventEmitter } from "eventemitter3";
 import { PamelloCommandsService } from "./Commands/PamelloCommandsService";
 import { PamelloClientConfig } from "./Config/PamelloClientConfig";
-import { PamelloEventsService } from "./Events/PamelloEventsServices";
 import { PamelloRequestsService } from "./Requests/PamelloRequestsService";
 import { PamelloSignalService } from "./Signal/PamelloSignalService";
 import { UserRemoteRepository } from "./Repositories/UserRemoteRepository";
 import { RemoteEntityQueryService } from "./Query/RemoteEntityQueryService";
+import { RemoteEventsService } from "./Events/PamelloEventsServices";
 
 interface PamelloClientEvents {
 	"onConnected": () => void;
@@ -17,7 +17,7 @@ interface PamelloClientEvents {
 export class PamelloClient extends EventEmitter<PamelloClientEvents> {
 	public readonly config: PamelloClientConfig;
 	
-	public readonly events: PamelloEventsService;
+	public readonly events: RemoteEventsService;
 
 	public readonly requests: PamelloRequestsService;
 	public readonly signal: PamelloSignalService;
@@ -35,7 +35,7 @@ export class PamelloClient extends EventEmitter<PamelloClientEvents> {
 
 		this.config = new PamelloClientConfig();
 
-		this.events = new PamelloEventsService(this);
+		this.events = new RemoteEventsService(this);
 
 		this.requests = new PamelloRequestsService(this.config);
 		this.signal = new PamelloSignalService(this.config, this.events);
