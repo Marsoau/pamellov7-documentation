@@ -1,5 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { PamelloClient } from "./PamelloClient";
+import { ClassType } from "./Query/Base/IRemoteEntityQueryService";
+import { IRemoteEntity } from "./Entities/Base/IRemoteEntity";
+import { RemoteUser } from "./Entities/RemoteUser";
 
 const PamelloContext = createContext<PamelloClient | null>(null);
 
@@ -19,7 +22,7 @@ export const PamelloProvider: React.FC<{ client: PamelloClient; children: React.
     );
 };
 
-export const usePamello = (): PamelloClient => {
+export function usePamello(): PamelloClient {
     const context = useContext(PamelloContext);
     if (!context) {
         throw new Error('usePamello must be used within a PamelloProvider');
@@ -27,7 +30,7 @@ export const usePamello = (): PamelloClient => {
     return context;
 };
 
-export const useConnectionState = (): boolean => {
+export function useConnectionState(): boolean {
 	var pamello = usePamello();
 	var [state, setState] = useState(pamello.signal.isConnected);
 
@@ -37,7 +40,7 @@ export const useConnectionState = (): boolean => {
 	return state;
 }
 
-export const useAuthorizationState = (): boolean => {
+export function useAuthorizationState(): boolean {
 	var pamello = usePamello();
 	var [state, setState] = useState(pamello.signal.isConnected);
 
@@ -45,5 +48,57 @@ export const useAuthorizationState = (): boolean => {
 	pamello.on("onUnauthrorized", () => setState(false));
 
 	return state;
+}
+
+export function useEntity<TEntityType extends IRemoteEntity>(type: ClassType<TEntityType>, id: number): TEntityType | null;
+export function useEntity<TEntityType extends IRemoteEntity>(type: ClassType<TEntityType>, query: string): TEntityType | null;
+export function useEntity<TEntityType extends IRemoteEntity>(type: ClassType<TEntityType>, queryOrId: string | number): TEntityType | null {
+	console.log("HHOK CALL");
+	const pamello = usePamello();
+	const isAuthorized = useAuthorizationState();
+
+	const fastEntity = typeof queryOrId === 'number' ? pamello.peql.getSingle(type, queryOrId) : null;
+
+    const [entity, setEntity] = useState<TEntityType | null>(
+		fastEntity
+	);
+
+	const [, setTick] = useState(0);
+	const refresh = () => setTick(tick => tick + 1);
+
+	useEffect(() => {
+		console.log("1UE CALL");
+		if (!isAuthorized) {
+			if (entity) setEntity(null);
+			return
+		}
+
+		setEntity(fastEntity);
+		if (fastEntity) return;
+
+		const requestEntity = async () => {
+			const result = await pamello.peql.getSingleAsync(type, queryOrId as any);
+			if (!result) return;
+
+			setEntity(result);
+		};
+
+		requestEntity();
+	}, [isAuthorized, type, queryOrId])
+
+	useEffect(() => {
+		console.log("2UE CALL");
+		if (entity) {
+			pamello.events.watch(() => {
+				refresh();
+			}, () => [entity])
+		}
+	}, [entity]);
+
+	return entity;
+}
+
+export function useUser(queryOrId: string | number) {
+	return useEntity(RemoteUser, queryOrId as any);
 }
 

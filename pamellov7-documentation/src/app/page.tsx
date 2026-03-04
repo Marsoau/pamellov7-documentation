@@ -1,8 +1,7 @@
 "use client"
 
-import { RemoteUser } from "pamellov7-wrapper";
-import { useAuthorizationState, useConnectionState, usePamello } from "pamellov7-wrapper/hooks";
-import { useEffect, useState } from "react";
+import { useAuthorizationState, useConnectionState, usePamello, useUser } from "pamellov7-wrapper/hooks";
+import { useState } from "react";
 
 export default function Home() {
 	const connected = useConnectionState();
@@ -13,27 +12,7 @@ export default function Home() {
 
 	const pamello = usePamello();
 
-	useEffect(() => {
-		console.log("test");
-		if (!authorized) return;
-		console.log("done");
-
-		const a = async () => {
-			var result = await pamello.peql.getSingleAsync(RemoteUser, "me");
-			if (!result) {
-				console.log("no result");
-				return
-			}
-
-			pamello.events.watch(() => {
-				console.log("change");
-			}, () => [result]);
-
-			console.log(result);
-		}
-
-		a();
-	}, [authorized]);
+	const user = useUser("me");
 
 	const connect = () => {
 		pamello.connectAsync(urlInputValue);
@@ -49,6 +28,7 @@ export default function Home() {
 	}
 
 	return <div>
+		<div>{user?.Name ?? "NOUSER"}</div>
 		<div>
 			<input
 				type="text"
