@@ -4,6 +4,7 @@ import { PamelloClientConfig } from "./Config/PamelloClientConfig";
 import { PamelloEventsService } from "./Events/PamelloEventsServices";
 import { PamelloRequestsService } from "./Requests/PamelloRequestsService";
 import { PamelloSignalService } from "./Signal/PamelloSignalService";
+import { UserRemoteRepository } from "./Repositories/UserRemoteRepository";
 
 interface PamelloClientEvents {
 	"onConnected": () => void;
@@ -22,6 +23,7 @@ export class PamelloClient extends EventEmitter<PamelloClientEvents> {
 	public readonly commands: PamelloCommandsService;
 
 	//todo repositories here
+	public readonly users: UserRemoteRepository;
 
 	//todo peql here
 
@@ -37,6 +39,8 @@ export class PamelloClient extends EventEmitter<PamelloClientEvents> {
 		this.requests = new PamelloRequestsService(this.config);
 		this.signal = new PamelloSignalService(this.config, this.events);
 		this.commands = new PamelloCommandsService(this.requests, this.signal);
+
+		this.users = new UserRemoteRepository(this.requests);
 	}
 
 	public async connectAsync(url: string) {

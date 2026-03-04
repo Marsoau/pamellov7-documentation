@@ -9,5 +9,6 @@ export class PamelloEventsService {
 	}
 
 	public invoke(eventDto: ReceivedEventJsonDto) {
+		//console.log(eventDto);
 	}
 }
