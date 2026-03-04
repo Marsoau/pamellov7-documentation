@@ -1,35 +1,48 @@
 "use client"
 
-import { request } from "http";
-import { useEffect, useState } from "react";
-import { PamelloClientConfig } from "../../../pamellov7-wrapper/dist/Config/PamelloClientConfig";
-import { PamelloRequestsService } from "../../../pamellov7-wrapper/dist/Requests/PamelloRequestsService";
-import { PamelloClient } from "pamellov7-wrapper";
+import { useConnectionState, useAuthorizationState, usePamello } from "pamellov7-wrapper/hooks";
 
 export default function Home() {
-	const [text, setText] = useState("");
+	const connected = useConnectionState();
+	const authorized = useAuthorizationState();
 
-	useEffect(() => {
-		const client = new PamelloClient();
+	const pamello = usePamello();
 
-		client.on("onConnected", () => console.log("Connected"));
-		client.on("onDisconnected", () => console.log("Disconnected"));
-
-		client.on("onAuthrorized", () => console.log("Authorized"));
-		client.on("onUnauthrorized", () => console.log("Unauthorized"));
-
-		const asyncRequest = async () => {
-			await client.connectAsync("https://server.tpamello.marsoau.com");
-			await client.authorizeAsync("9a40ad25-7e80-43c1-bdd9-a7a84218db5d");
-
-			await client.disconnectAsync();
-		}
-
-		asyncRequest();
-	}, [])
-
+	const connect = () => {
+		pamello.connectAsync("https://server.tpamello.marsoau.com");
+	}
+	const disconnect = () => {
+		pamello.disconnectAsync();
+	}
+	const authorize = () => {
+		pamello.authorizeAsync("9a40ad25-7e80-43c1-bdd9-a7a84218db5d");
+	}
+	const unauthorize = () => {
+		pamello.unauthorizeAsync();
+	}
 
 	return <div>
-		Test {text}
+		<div>
+			<button
+				onClick={connect}
+			>connect</button>
+		</div>
+		<div>
+			<button
+				onClick={disconnect}
+			>disconnect</button>
+		</div>
+		<div>
+			<button
+				onClick={authorize}
+			>authorize</button>
+		</div>
+		<div>
+			<button
+				onClick={unauthorize}
+			>unauthorize</button>
+		</div>
+		<div>{connected ? "Connected" : "DISconnected"}</div>
+		<div>{authorized ? "Authorized" : "UNauthorized"}</div>
 	</div>;
 }

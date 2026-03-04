@@ -28,6 +28,8 @@ export class PamelloClient extends EventEmitter<PamelloClientEvents> {
 	constructor() {
 		super();
 
+		console.log("recreated");
+
 		this.config = new PamelloClientConfig();
 
 		this.events = new PamelloEventsService(this);
