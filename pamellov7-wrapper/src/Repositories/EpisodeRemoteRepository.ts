@@ -1,11 +1,11 @@
-import { RemoteUser } from "../Entities/RemoteUser";
+import { RemoteEpisode } from "../Entities/RemoteEpisode";
 import { PamelloRequestsService } from "../Requests/PamelloRequestsService";
 import { RemoteRepository } from "./Base/RemoteRepository";
 
-export class UserRemoteRepository extends RemoteRepository<RemoteUser> {
+export class EpisodeRemoteRepository extends RemoteRepository<RemoteEpisode> {
 	constructor(
         requests: PamelloRequestsService,
 	) {
-		super(requests, RemoteUser);
+		super(requests, RemoteEpisode);
 	}
 }

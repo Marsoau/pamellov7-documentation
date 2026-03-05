@@ -1,4 +1,4 @@
-import { PamelloUserDto } from "../Dto/Entities/PamelloSongDto";
+import { PamelloUserDto } from "../Dto/Entities/PamelloUserDto";
 import { RemoteEntity } from "./Base/RemoteEntity";
 
 export class RemoteUser extends RemoteEntity<PamelloUserDto> {

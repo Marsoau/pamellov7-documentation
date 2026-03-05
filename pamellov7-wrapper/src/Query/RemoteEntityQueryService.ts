@@ -10,10 +10,10 @@ export class RemoteEntityQueryService extends AbstractRemoteEntityQueryService {
         super(); // Must call super() when extending a class in TS
         this._repositories = [
             client.users,
-            // client.songs,
-            // client.episodes,
-            // client.playlists,
-            // client.players
+            client.songs,
+            client.episodes,
+            client.playlists,
+            client.players
         ];
     }
 

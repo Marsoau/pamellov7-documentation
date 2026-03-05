@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuthorizationState, useConnectionState, usePamello, useUser } from "pamellov7-wrapper/hooks";
+import { useAuthorizationState, useConnectionState, usePamello, usePlayer, useSong, useUser } from "pamellov7-wrapper/hooks";
 import { useState } from "react";
 
 export default function Home() {
@@ -13,6 +13,8 @@ export default function Home() {
 	const pamello = usePamello();
 
 	const user = useUser("me");
+	const player = usePlayer(user?.Dto.SelectedPlayerId ?? 0);
+	const song = useSong(player?.Dto.Queue.CurrentSongId ?? 0);
 
 	const connect = () => {
 		pamello.connectAsync(urlInputValue);
@@ -29,6 +31,11 @@ export default function Home() {
 
 	return <div>
 		<div>{user?.Name ?? "NOUSER"}</div>
+		<div>{player?.Dto.Name ?? "NOPLAYEr"}</div>
+		<div>{song?.Dto.Name ?? "NOsong"}</div>
+		{player && <div>
+			{player.Dto.Queue.CurrentSongTimePassed} : {player.Dto.Queue.CurrentSongTimeTotal}
+		</div>}
 		<div>
 			<input
 				type="text"

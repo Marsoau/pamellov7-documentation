@@ -6,6 +6,10 @@ import { PamelloSignalService } from "./Signal/PamelloSignalService";
 import { UserRemoteRepository } from "./Repositories/UserRemoteRepository";
 import { RemoteEntityQueryService } from "./Query/RemoteEntityQueryService";
 import { RemoteEventsService } from "./Events/PamelloEventsServices";
+import { SongRemoteRepository } from "./Repositories/SongRemoteRepository";
+import { EpisodeRemoteRepository } from "./Repositories/EpisodeRemoteRepository";
+import { PlaylistRemoteRepository } from "./Repositories/PlaylistRemoteRepository";
+import { PlayerRemoteRepository } from "./Repositories/PlayerRemoteRepository";
 
 interface PamelloClientEvents {
 	"onConnected": () => void;
@@ -23,8 +27,12 @@ export class PamelloClient extends EventEmitter<PamelloClientEvents> {
 	public readonly signal: PamelloSignalService;
 	public readonly commands: PamelloCommandsService;
 
-	//todo repositories here
 	public readonly users: UserRemoteRepository;
+	public readonly songs: SongRemoteRepository;
+	public readonly episodes: EpisodeRemoteRepository;
+	public readonly playlists: PlaylistRemoteRepository;
+	public readonly players: PlayerRemoteRepository;
+
 
 	public readonly peql: RemoteEntityQueryService;
 
@@ -42,6 +50,10 @@ export class PamelloClient extends EventEmitter<PamelloClientEvents> {
 		this.commands = new PamelloCommandsService(this.requests, this.signal);
 
 		this.users = new UserRemoteRepository(this.requests);
+		this.songs = new SongRemoteRepository(this.requests);
+		this.episodes = new EpisodeRemoteRepository(this.requests);
+		this.playlists = new PlaylistRemoteRepository(this.requests);
+		this.players = new PlayerRemoteRepository(this.requests);
 
 		this.peql = new RemoteEntityQueryService(this);
 	}

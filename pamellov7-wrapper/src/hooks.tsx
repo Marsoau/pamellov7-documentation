@@ -3,6 +3,10 @@ import { PamelloClient } from "./PamelloClient";
 import { ClassType } from "./Query/Base/IRemoteEntityQueryService";
 import { IRemoteEntity } from "./Entities/Base/IRemoteEntity";
 import { RemoteUser } from "./Entities/RemoteUser";
+import { RemotePlayer } from "./Entities/RemotePlayer";
+import { RemotePlaylist } from "./Entities/RemotePlaylist";
+import { RemoteEpisode } from "./Entities/RemoteEpisode";
+import { RemoteSong } from "./Entities/RemoteSong";
 
 const PamelloContext = createContext<PamelloClient | null>(null);
 
@@ -100,5 +104,21 @@ export function useEntity<TEntityType extends IRemoteEntity>(type: ClassType<TEn
 
 export function useUser(queryOrId: string | number) {
 	return useEntity(RemoteUser, queryOrId as any);
+}
+
+export function useSong(queryOrId: string | number) {
+	return useEntity(RemoteSong, queryOrId as any);
+}
+
+export function useEpisode(queryOrId: string | number) {
+	return useEntity(RemoteEpisode, queryOrId as any);
+}
+
+export function usePlaylist(queryOrId: string | number) {
+	return useEntity(RemotePlaylist, queryOrId as any);
+}
+
+export function usePlayer(queryOrId: string | number) {
+	return useEntity(RemotePlayer, queryOrId as any);
 }
 
