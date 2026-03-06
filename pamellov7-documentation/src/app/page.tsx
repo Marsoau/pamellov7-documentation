@@ -24,6 +24,7 @@ export default function Home() {
 	const disconnect = () => {
 		pamello.disconnectAsync();
 	}
+
 	const authorize = () => {
 		pamello.authorizeAsync(tokenInputValue);
 	}

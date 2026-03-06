@@ -38,18 +38,38 @@ export function useConnectionState(): boolean {
 	var pamello = usePamello();
 	var [state, setState] = useState(pamello.signal.isConnected);
 
-	pamello.on("onConnected", () => setState(true));
-	pamello.on("onDisconnected", () => setState(false));
+	useEffect(() => {
+		const onConnected = () => setState(true);
+		const onDisconnected = () => setState(false);
+
+		pamello.on("onConnected", onConnected);
+		pamello.on("onDisconnected", onDisconnected);
+
+		return () => {
+			pamello.off("onConnected", onConnected)
+			pamello.off("onDisconnected", onDisconnected)
+		}
+	}, [])
 
 	return state;
 }
 
 export function useAuthorizationState(): boolean {
 	var pamello = usePamello();
-	var [state, setState] = useState(pamello.signal.isConnected);
+	var [state, setState] = useState(pamello.signal.isAuthorized);
 
-	pamello.on("onAuthrorized", () => setState(true));
-	pamello.on("onUnauthrorized", () => setState(false));
+	useEffect(() => {
+		const onAuthorized = () => setState(true);
+		const onUnauthorized = () => setState(false);
+
+		pamello.on("onAuthrorized", onAuthorized);
+		pamello.on("onUnauthrorized", onUnauthorized);
+
+		return () => {
+			pamello.off("onAuthrorized", onAuthorized)
+			pamello.off("onUnauthrorized", onUnauthorized)
+		}
+	}, [])
 
 	return state;
 }
@@ -57,7 +77,6 @@ export function useAuthorizationState(): boolean {
 export function useEntity<TEntityType extends IRemoteEntity>(type: ClassType<TEntityType>, id: number): TEntityType | null;
 export function useEntity<TEntityType extends IRemoteEntity>(type: ClassType<TEntityType>, query: string): TEntityType | null;
 export function useEntity<TEntityType extends IRemoteEntity>(type: ClassType<TEntityType>, queryOrId: string | number): TEntityType | null {
-	console.log("HHOK CALL");
 	const pamello = usePamello();
 	const isAuthorized = useAuthorizationState();
 
@@ -71,7 +90,6 @@ export function useEntity<TEntityType extends IRemoteEntity>(type: ClassType<TEn
 	const refresh = () => setTick(tick => tick + 1);
 
 	useEffect(() => {
-		console.log("1UE CALL");
 		if (!isAuthorized) {
 			if (entity) setEntity(null);
 			return
@@ -91,7 +109,6 @@ export function useEntity<TEntityType extends IRemoteEntity>(type: ClassType<TEn
 	}, [isAuthorized, type, queryOrId])
 
 	useEffect(() => {
-		console.log("2UE CALL");
 		if (entity) {
 			pamello.events.watch(() => {
 				refresh();
