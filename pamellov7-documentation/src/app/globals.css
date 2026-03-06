@@ -4,6 +4,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@source "../components";
+
 @theme inline {
 	--color-back-0: #000;
 	--color-back-1: #080808;

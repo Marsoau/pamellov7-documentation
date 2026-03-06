@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button";
+import Header from "@/components/ui/header";
 import { useAuthorizationState, useConnectionState, usePamello, usePlayer, useSong, useUser } from "pamellov7-wrapper/hooks";
 import { useState } from "react";
 
