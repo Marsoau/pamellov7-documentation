@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -9,7 +10,7 @@
 @theme inline {
 	--color-back-0: #000;
 	--color-back-1: #080808;
-	--color-back-2: #0F0F0F;
+	--color-back-2: #0D0D0D;
 	--color-back-3: #121212;
 	--color-back-4: #161616;
 	--color-back-5: #202020;
