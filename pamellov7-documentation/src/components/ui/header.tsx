@@ -4,10 +4,11 @@ export default function Header() {
 	return <header
 		className="flex items-center px-2 gap-2.5 bg-back-3 h-10"
 	>
-		<HeaderButton href="/guides">Guides</HeaderButton>
-		<HeaderButton href="/peql">PEQL</HeaderButton>
-		<HeaderButton href="/api">API</HeaderButton>
-		<HeaderButton href="/commands">Commands</HeaderButton>
-		<HeaderButton href="/types">Types</HeaderButton>
+		<HeaderButton href="/Guides">Guides</HeaderButton>
+		<HeaderButton href="/PEQL">PEQL</HeaderButton>
+		<HeaderButton href="/API">API</HeaderButton>
+		<HeaderButton href="/Commands">Commands</HeaderButton>
+		<HeaderButton href="/Types">Types</HeaderButton>
+		<HeaderButton href="/T">T</HeaderButton>
 	</header>
 }

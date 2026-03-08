@@ -11,10 +11,17 @@ export default function HeaderButton({ href, children }: {
 }) {
 	const path = usePathname();
 
-	const isHighlited = path.startsWith(href);
+	const index = path.indexOf("/", 1);
+
+	console.log("aaa");
+	console.log(path.substring(0, index != -1 ? index : path.length));
+	console.log("bnbb");
+	console.log(href);
+
+	const isHighlited = path.substring(0, index != -1 ? index : path.length) == href;
 
 	return <Link href={isHighlited ? "/" : href}>
-		<Button variant={isHighlited ? "highlited" : "default"} onClick={() => console.log(`click on ${href}`)}>
+		<Button variant={isHighlited ? "highlited" : "transparent"} onClick={() => console.log(`click on ${href}`)}>
 			{children}
 		</Button>
 	</Link>

@@ -9,7 +9,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "flex bg-back-3 hover:bg-back-4 text-front-2 rounded-[10px]",
+        default: "flex bg-back-3 text-front-2 hover:bg-back-5 hover:text-front-0 rounded-[10px]",
+        transparent: "flex bg-transparent text-front-2 hover:text-front-0 rounded-[10px]",
         highlited: "flex bg-back-5 text-front-0 rounded-[10px]",
       },
       size: {
