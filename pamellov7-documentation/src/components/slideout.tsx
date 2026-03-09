@@ -1,5 +1,4 @@
 import { Dispatch, SetStateAction } from "react"
-import { Button } from "./ui/button"
 
 export default function Slideout({
 	isExpanded,
@@ -15,26 +14,58 @@ export default function Slideout({
 	setHeight: Dispatch<SetStateAction<number>>
 }) {
 	return <div
-		className="sticky bottom-0 flex flex-col"
+		className="sticky bottom-0 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
 		style={{
-			flexGrow: isExpanded && !isCollapsed ? 1 : 0
+			display: "grid",
+			flexBasis: isCollapsed ? 40 : height + 40,
+			flexGrow: isExpanded && !isCollapsed ? 1 : 0,
+			flexShrink: 0,
+			gridTemplateRows: isCollapsed ? "40px 0px" : `40px minmax(0, 1fr)`,
 		}}
 	>
 		<div
-			className="bg-back-3 h-10"
+			className="bg-back-3 h-full cursor-pointer flex items-center gap-4 px-4"
 			onClick={() => setCollapsed(!isCollapsed)}
 		>
-			<span>{isExpanded ? "y" : "n"}</span>
-			<span>{isCollapsed ? "y" : "n"}</span>
+			<span>Exp: {isExpanded ? "y" : "n"}</span>
+			<span>Col: {isCollapsed ? "y" : "n"}</span>
 			<span>{height}</span>
 		</div>
 		<div
-			className="grow bg-back-1"
+			className="bg-back-1 overflow-hidden min-h-0"
 			style={{
-				display: isCollapsed ? "none" : "block",
-				minHeight: isCollapsed ? 0 : height
+				minHeight: height
 			}}
 		>
+			<div className="flex flex-col flex-wrap h-full">
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+				<div>content</div>
+			</div>
 		</div>
 	</div>
 }
