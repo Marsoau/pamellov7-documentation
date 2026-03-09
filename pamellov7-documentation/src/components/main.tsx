@@ -6,7 +6,6 @@ import Slideout from "./slideout";
 import { usePathname } from "next/navigation";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
-	const [slideoutHeight, setSlideoutHeight] = useState(300);
 
 	const [slideoutCollapsed, setSlideoutCollapsed] = useState(true);
 
@@ -14,20 +13,20 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 	const slideoutExpanded = path == "/";
 
 	return (
-		<div className="min-h-screen flex flex-col overflow-hidden">
+		<div className="min-h-screen flex flex-col">
 			<Header />
 
 			<div
-				className={`overflow-hidden min-h-0 transition-all duration-300 ease-in-out relative ${
-slideoutExpanded && !slideoutCollapsed
-? "opacity-0 flex-[0_0_0px]"
-: "opacity-100 flex-1"
-}`}
+				className={`transition-all duration-300 ease-in-out grid ${
+					slideoutExpanded && !slideoutCollapsed
+						? "grid-rows-[0fr] opacity-0"
+						: "grid-rows-[1fr] opacity-100 flex-1"
+				}`}
 			>
-				<main className="h-full relative">
+				<main className="overflow-hidden min-h-0">
 					<div 
 						key={path} 
-						className="absolute inset-x-0 top-0 animate-in fade-in duration-300 fill-mode-backwards"
+						className="animate-in fade-in duration-300 fill-mode-backwards"
 					>
 						{children}
 					</div>
@@ -38,8 +37,6 @@ slideoutExpanded && !slideoutCollapsed
 				isExpanded={slideoutExpanded}
 				isCollapsed={slideoutCollapsed}
 				setCollapsed={setSlideoutCollapsed}
-				height={slideoutHeight}
-				setHeight={setSlideoutHeight}
 			/>
 		</div>
 	)

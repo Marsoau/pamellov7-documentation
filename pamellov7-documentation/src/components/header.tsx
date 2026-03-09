@@ -2,7 +2,7 @@ import HeaderButton from "./ui/headerButton"
 
 export default function Header() {
 	return <header
-		className="flex items-center px-2 gap-2.5 bg-back-3 h-10"
+		className="sticky top-0 flex items-center px-2 gap-2.5 bg-back-3 h-10"
 	>
 		<HeaderButton href="/Guides">Guides</HeaderButton>
 		<HeaderButton href="/PEQL">PEQL</HeaderButton>
