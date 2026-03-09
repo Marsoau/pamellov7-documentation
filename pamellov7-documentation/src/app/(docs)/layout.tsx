@@ -3,9 +3,12 @@ export default function TabsLayout({
 }: Readonly<{
 		children: React.ReactNode;
 	}>) {
-	return (
+	return <div className="grow">
+		<aside>
+			asd
+		</aside>
 		<div>
 			{children}
 		</div>
-	);
+	</div>
 }

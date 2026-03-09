@@ -1,4 +1,4 @@
-import HeaderButton from "./headerButton";
+import HeaderButton from "./ui/headerButton"
 
 export default function Header() {
 	return <header
