@@ -2,20 +2,31 @@ import { IRemoteEntity } from "../Entities/Base/IRemoteEntity";
 import { PamelloClient } from "../PamelloClient";
 import { ReceivedEventJsonDto } from "./Other/RecievedEventJsonDto";
 
-export class UpdateSubscription {
+class DestroyableSubscription {
+	public isDestroyed: boolean = false;
+	public destroy = () => this.isDestroyed = true;
+}
+
+export class UpdateSubscription extends DestroyableSubscription {
 	constructor(
 		public handler: () => Promise<void> | void,
 		public watchedEntities: () => (IRemoteEntity | null | undefined)[]
-	) {}
+	) {
+		super();
+	}
 
 	public async invokeAsync(): Promise<void> {
 		await this.handler();
 	}
 }
 
-export interface EventSubscription {
-	eventName: string; // E.g., "SongAddedEvent"
-	handler: (ev: any) => void;
+export class EventSubscription extends DestroyableSubscription {
+	constructor(
+		public eventName: string,
+		public handler: (ev: any) => void
+	) {
+		super();
+	}
 }
 
 export class RemoteEventsService {
@@ -52,7 +63,7 @@ export class RemoteEventsService {
 	}
 
 	public subscribe(eventName: string, handler: (ev: any) => void): EventSubscription {
-		const subscription: EventSubscription = { eventName, handler };
+		const subscription = new EventSubscription(eventName, handler);
 		this._eventSubscriptions.push(subscription);
 		return subscription;
 	}
@@ -89,7 +100,14 @@ export class RemoteEventsService {
 
 			propertyOwner[lastPart] = newValue;
 
-			for (const subscription of this._updateSubscriptions) {
+			for (let i = this._updateSubscriptions.length - 1; i >= 0; i--) {
+				const subscription = this._updateSubscriptions[i];
+
+				if (subscription.isDestroyed) {
+					this._eventSubscriptions.splice(i, 1);
+					continue;
+				}
+
 				const watched = subscription.watchedEntities();
 				if (watched.includes(entity)) {
 					this._updateTasks.push(() => subscription.invokeAsync());
@@ -109,7 +127,14 @@ export class RemoteEventsService {
 		if (primaryType) {
 			const eventName = primaryType.Name;
 
-			for (const subscription of this._eventSubscriptions) {
+			for (let i = this._eventSubscriptions.length - 1; i >= 0; i--) {
+				const subscription = this._eventSubscriptions[i];
+
+				if (subscription.isDestroyed) {
+					this._eventSubscriptions.splice(i, 1);
+					continue;
+				}
+
 				if (subscription.eventName === eventName || subscription.eventName === "*") {
 					subscription.handler(ev);
 				}

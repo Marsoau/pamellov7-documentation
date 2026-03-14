@@ -110,9 +110,13 @@ export function useEntity<TEntityType extends IRemoteEntity>(type: ClassType<TEn
 
 	useEffect(() => {
 		if (entity) {
-			pamello.events.watch(() => {
+			const subscription = pamello.events.watch(() => {
 				refresh();
 			}, () => [entity])
+
+			return () => {
+				subscription.destroy()
+			};
 		}
 	}, [entity]);
 
