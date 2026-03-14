@@ -12,6 +12,11 @@ const PamelloContext = createContext<PamelloClient | null>(null);
 
 export const PamelloProvider: React.FC<{ client: PamelloClient; children: React.ReactNode }> = ({ client, children }) => {
     useEffect(() => {
+		client.on("onDisconnected", (isAutomatic: boolean) => {
+			if (!isAutomatic) return;
+		
+			
+		});
 		const initialConnection = async () => {
 			//todo check browser storage for connection data and connect
 		}

@@ -6,13 +6,11 @@ import {
 } from "@microsoft/signalr";
 
 import { IPamelloCommandInvoker } from "../Commands/IPamelloCommandInvoker";
-import { PamelloClientConfig } from "../Config/PamelloClientConfig";
-import { PamelloEventsService } from "../Events/PamelloEventsServices";
 import { ReceivedEventJsonDto } from "../Events/Other/RecievedEventJsonDto";
+import { PamelloClient } from "../PamelloClient";
 
 export class PamelloSignalService implements IPamelloCommandInvoker {
-	private readonly _config: PamelloClientConfig;
-	private readonly _events: PamelloEventsService;
+	private readonly _client: PamelloClient;
 
     private _connection: HubConnection | null;
     protected get connection(): HubConnection {
@@ -31,9 +29,8 @@ export class PamelloSignalService implements IPamelloCommandInvoker {
 		return this._isAuthorized;
     }
 
-    constructor(config: PamelloClientConfig, events: PamelloEventsService) {
-		this._config = config;
-		this._events = events;
+    constructor(client: PamelloClient) {
+		this._client = client;
 
 		this._connection = null;
 
@@ -41,21 +38,19 @@ export class PamelloSignalService implements IPamelloCommandInvoker {
     }
 
     public async connectAsync(): Promise<HubConnectionState> {
-        if (!this._config.baseUrl) {
+        if (!this._client.config.baseUrl) {
             throw new Error("PamelloException: Base URL is not set");
         }
 
-        // Initialize connection with SignalR configuration
         this._connection = new HubConnectionBuilder()
-            .withUrl(`${this._config.baseUrl}/Signal`, {
+            .withUrl(`${this._client.config.baseUrl}/Signal`, {
                 transport: HttpTransportType.WebSockets,
                 skipNegotiation: true
             })
-            .withAutomaticReconnect()
             .build();
 
-        // Use arrow function to preserve 'this' context
         this._connection.on("Event", (eventDto: ReceivedEventJsonDto) => this.onEvent(eventDto));
+        this._connection.onclose(() => this._client.disconnectAsync(true))
 
         await this._connection.start();
 
@@ -66,16 +61,16 @@ export class PamelloSignalService implements IPamelloCommandInvoker {
         console.log("Received event:");
         console.log(eventDto);
 
-        this._events.invoke(eventDto);
+        this._client.events.invoke(eventDto);
     }
 
     public async authorizeAsync(): Promise<void> {
-        if (!this._config.token) {
+        if (!this._client.config.token) {
             throw new Error("PamelloException: Token is not set");
         }
 
 		try {
-			await this.connection.invoke("Authorize", this._config.token);
+			await this.connection.invoke("Authorize", this._client.config.token);
 			this._isAuthorized = true;
 		}
 		catch (x) {

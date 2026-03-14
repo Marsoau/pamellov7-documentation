@@ -12,10 +12,11 @@ import { PlaylistRemoteRepository } from "./Repositories/PlaylistRemoteRepositor
 import { PlayerRemoteRepository } from "./Repositories/PlayerRemoteRepository";
 
 interface PamelloClientEvents {
-	"onConnected": () => void;
-	"onDisconnected": () => void;
-	"onAuthrorized": () => void;
-	"onUnauthrorized": () => void;
+	"onConnected": (isAutomatic: boolean) => void;
+	"onDisconnected": (isAutomatic: boolean) => void;
+	"onAuthrorized": (isAutomatic: boolean) => void;
+	"onUnauthrorized": (isAutomatic: boolean) => void;
+	"onFailedAttempt": (error: Error, attempt: number) => void;
 }
 
 export class PamelloClient extends EventEmitter<PamelloClientEvents> {
@@ -46,7 +47,7 @@ export class PamelloClient extends EventEmitter<PamelloClientEvents> {
 		this.events = new RemoteEventsService(this);
 
 		this.requests = new PamelloRequestsService(this.config);
-		this.signal = new PamelloSignalService(this.config, this.events);
+		this.signal = new PamelloSignalService(this);
 		this.commands = new PamelloCommandsService(this.requests, this.signal);
 
 		this.users = new UserRemoteRepository(this.requests);
@@ -58,17 +59,31 @@ export class PamelloClient extends EventEmitter<PamelloClientEvents> {
 		this.peql = new RemoteEntityQueryService(this);
 	}
 
-	public async connectAsync(url: string) {
+	public async startConnectionAttemptsAsync(url: string, maxAttempts: number = -1, delay: number = 1000) {
+		for (let attempt = 0; maxAttempts < 0 || attempt < maxAttempts; attempt++) {
+			try {
+				await this.connectAsync(url, true);
+				return;
+			}
+			catch (e: any) {
+				this.emit("onFailedAttempt", e, attempt);
+
+				await new Promise(resolve => setTimeout(resolve, delay));
+			}
+		}
+	}
+
+	public async connectAsync(url: string, isAutomatic: boolean = false) {
 		if (this.signal.isConnected) throw new Error("Already connected");
 		
 		this.config.baseUrl = url;
 
 		await this.signal.connectAsync();
 
-		if (this.signal.isConnected) this.emit("onConnected");
+		if (this.signal.isConnected) this.emit("onConnected", isAutomatic);
 	}
 
-	public async authorizeAsync(token: string) {
+	public async authorizeAsync(token: string, isAutomatic: boolean = false) {
 		if (!this.signal.isConnected) throw new Error("Not connected");
 		if (this.signal.isAuthorized) throw new Error("Already authorized");
 
@@ -81,31 +96,26 @@ export class PamelloClient extends EventEmitter<PamelloClientEvents> {
 			this.config.token = null;
 		}
 
-		if (this.signal.isAuthorized) this.emit("onAuthrorized");
+		if (this.signal.isAuthorized) this.emit("onAuthrorized", isAutomatic);
 	}
 
-	public async unauthorizeAsync() {
+	public async unauthorizeAsync(isAutomatic: boolean = false) {
 		if (!this.signal.isConnected) throw new Error("Not connected");
 
 		try {
 			await this.signal.unauthorizeAsync();
 		}
 		finally {
+			this.peql.clearCache();
 			this.config.token = null;
+			if (!this.signal.isAuthorized) this.emit("onUnauthrorized", isAutomatic);
 		}
-
-		if (!this.signal.isAuthorized) this.emit("onUnauthrorized");
 	}
 
-	public async disconnectAsync() {
-		if (!this.signal.isConnected) throw new Error("Not connected");
-
-		await this.signal.unauthorizeAsync();
+	public async disconnectAsync(isAutomatic: boolean = false) {
+		await this.unauthorizeAsync();
 		await this.signal.disconnectAsync();
 
-		//peql clear cache
-		
-		if (!this.signal.isAuthorized) this.emit("onUnauthrorized");
-		if (!this.signal.isConnected) this.emit("onDisconnected");
+		if (!this.signal.isConnected) this.emit("onDisconnected", isAutomatic);
 	}
 }

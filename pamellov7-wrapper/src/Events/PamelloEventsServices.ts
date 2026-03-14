@@ -83,7 +83,7 @@ export class RemoteEventsService {
 			const entity = this._client.peql.getSingleByInterfaceName(typeInfo.EntityTypeName, id);
 			if (!entity) continue;
 
-			let propertyOwner: any = (entity as any).Dto; // Assuming entity has a 'dto' property
+			let propertyOwner: any = (entity as IRemoteEntity).Dto;
 
 			if (!propertyOwner) continue;
 

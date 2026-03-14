@@ -1,11 +1,12 @@
 "use client"
 
 import { useAuthorizationState, useConnectionState, usePamello, usePlayer, useSong, useUser } from "pamellov7-wrapper/hooks";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
 	const connected = useConnectionState();
 	const authorized = useAuthorizationState();
+	const [attemptCount, setAttemptCount] = useState(-1);
 
 	const [urlInputValue, setUrlInput] = useState("https://server.tpamello.marsoau.com");
 	const [tokenInputValue, setTokenInput] = useState("9a40ad25-7e80-43c1-bdd9-a7a84218db5d");
@@ -15,6 +16,10 @@ export default function Home() {
 	const user = useUser("me");
 	const player = usePlayer(user?.Dto.SelectedPlayerId ?? 0);
 	const song = useSong(player?.Dto.Queue.CurrentSongId ?? 0);
+
+	const startAttempts = () => {
+		pamello.startConnectionAttemptsAsync(urlInputValue);
+	}
 
 	const connect = () => {
 		pamello.connectAsync(urlInputValue);
@@ -29,6 +34,12 @@ export default function Home() {
 	const unauthorize = () => {
 		pamello.unauthorizeAsync();
 	}
+
+	useEffect(() => {
+		pamello.on("onFailedAttempt", (e, attempt) => {
+			setAttemptCount(attempt);
+		});
+	}, [])
 
 	return <div>
 		<div>{user?.Name ?? "NOUSER"}</div>
@@ -48,6 +59,12 @@ export default function Home() {
 			<button
 				onClick={connect}
 			>connect</button>
+		</div>
+		<div>
+			attempt count: {attemptCount}
+			<button
+				onClick={startAttempts}
+			>start</button>
 		</div>
 		<div>
 			<button
