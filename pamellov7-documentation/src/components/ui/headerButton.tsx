@@ -13,11 +13,6 @@ export default function HeaderButton({ href, children }: {
 
 	const index = path.indexOf("/", 1);
 
-	console.log("aaa");
-	console.log(path.substring(0, index != -1 ? index : path.length));
-	console.log("bnbb");
-	console.log(href);
-
 	const isHighlited = path.substring(0, index != -1 ? index : path.length) == href;
 
 	return <Link href={isHighlited ? "/" : href}>

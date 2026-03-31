@@ -30,7 +30,7 @@ export abstract class RemoteRepository<TEntityType extends IRemoteEntity> {
     }
 
     public load(dto: any): TEntityType { // Use PamelloEntityDto type here if you have it
-        let entity = this.getSingle(dto.id);
+        let entity = this.getSingle(dto.Id);
         if (entity) return entity;
 
         entity = new this.entityType(dto); 

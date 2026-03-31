@@ -104,7 +104,7 @@ export class RemoteEventsService {
 				const subscription = this._updateSubscriptions[i];
 
 				if (subscription.isDestroyed) {
-					this._eventSubscriptions.splice(i, 1);
+					this._updateSubscriptions.splice(i, 1);
 					continue;
 				}
 

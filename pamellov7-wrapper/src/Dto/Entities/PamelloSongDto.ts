@@ -2,12 +2,12 @@ import { PamelloEntityDto } from "./Base/PamelloEntityDto";
 
 export class PamelloSongDto extends PamelloEntityDto {
     CoverUrl!: string;
-    AddedById!: number;
+    AddedBy!: number;
     AddedAt!: string;
     Associations!: string[];
-    FavoriteByIds!: number[];
-    EpisodesIds!: number[];
-    PlaylistsIds!: number[];
+    FavoriteBy!: number[];
+    Episodes!: number[];
+    Playlists!: number[];
     SelectedSourceIndex!: number;
     SourcesPlatformKeys!: string[];
 }

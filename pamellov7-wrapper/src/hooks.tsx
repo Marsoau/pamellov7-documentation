@@ -12,7 +12,7 @@ const PamelloContext = createContext<PamelloClient | null>(null);
 
 export const PamelloProvider: React.FC<{ client: PamelloClient; children: React.ReactNode }> = ({ client, children }) => {
     useEffect(() => {
-		client.on("onDisconnected", (isAutomatic: boolean) => {
+		client.signal.on("onDisconnected", (isAutomatic: boolean) => {
 			if (!isAutomatic) return;
 		
 			
@@ -47,12 +47,12 @@ export function useConnectionState(): boolean {
 		const onConnected = () => setState(true);
 		const onDisconnected = () => setState(false);
 
-		pamello.on("onConnected", onConnected);
-		pamello.on("onDisconnected", onDisconnected);
+		pamello.signal.on("onConnected", onConnected);
+		pamello.signal.on("onDisconnected", onDisconnected);
 
 		return () => {
-			pamello.off("onConnected", onConnected)
-			pamello.off("onDisconnected", onDisconnected)
+			pamello.signal.off("onConnected", onConnected)
+			pamello.signal.off("onDisconnected", onDisconnected)
 		}
 	}, [])
 
@@ -67,12 +67,12 @@ export function useAuthorizationState(): boolean {
 		const onAuthorized = () => setState(true);
 		const onUnauthorized = () => setState(false);
 
-		pamello.on("onAuthrorized", onAuthorized);
-		pamello.on("onUnauthrorized", onUnauthorized);
+		pamello.signal.on("onAuthrorized", onAuthorized);
+		pamello.signal.on("onUnauthrorized", onUnauthorized);
 
 		return () => {
-			pamello.off("onAuthrorized", onAuthorized)
-			pamello.off("onUnauthrorized", onUnauthorized)
+			pamello.signal.off("onAuthrorized", onAuthorized)
+			pamello.signal.off("onUnauthrorized", onUnauthorized)
 		}
 	}, [])
 
@@ -116,6 +116,7 @@ export function useEntity<TEntityType extends IRemoteEntity>(type: ClassType<TEn
 	useEffect(() => {
 		if (entity) {
 			const subscription = pamello.events.watch(() => {
+				console.log("updating hook");
 				refresh();
 			}, () => [entity])
 

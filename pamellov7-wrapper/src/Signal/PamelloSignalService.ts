@@ -1,116 +1,159 @@
 import {
-    HubConnection,
-    HubConnectionBuilder,
-    HubConnectionState,
-    HttpTransportType
+	HubConnection,
+	HubConnectionBuilder,
+	HubConnectionState,
+	HttpTransportType
 } from "@microsoft/signalr";
 
+import { EventEmitter } from "eventemitter3";
 import { IPamelloCommandInvoker } from "../Commands/IPamelloCommandInvoker";
 import { ReceivedEventJsonDto } from "../Events/Other/RecievedEventJsonDto";
 import { PamelloClient } from "../PamelloClient";
+import { RemoteUser } from "../Entities/RemoteUser";
 
-export class PamelloSignalService implements IPamelloCommandInvoker {
+interface PamelloClientEvents {
+	"onConnected": (isAutomatic: boolean) => void;
+	"onDisconnected": (isAutomatic: boolean) => void;
+	"onAuthrorized": (isAutomatic: boolean) => void;
+	"onUnauthrorized": (isAutomatic: boolean) => void;
+	"onFailedAttempt": (error: Error, attempt: number) => void;
+}
+
+export class PamelloSignalService extends EventEmitter<PamelloClientEvents> implements IPamelloCommandInvoker {
 	private readonly _client: PamelloClient;
 
-    private _connection: HubConnection | null;
-    protected get connection(): HubConnection {
-        if (this._connection !== null && this.isConnected) {
-            return this._connection;
-        }
-        throw new Error("NotConnectedPamelloException: SignalR connection is not initiated");
-    }
+	private _connection: HubConnection | null;
+	protected get connection(): HubConnection {
+		if (this._connection !== null && this.isConnected) {
+			return this._connection;
+		}
+		throw new Error("NotConnectedPamelloException: SignalR connection is not initiated");
+	}
 
-    public get isConnected(): boolean {
-        return this._connection?.state === HubConnectionState.Connected;
-    }
+	private _authorizedUser: RemoteUser | null;
+	public get authorizedUser(): RemoteUser | null {
+		return this._authorizedUser;
+	}
 
-	private _isAuthorized: boolean;
-    public get isAuthorized(): boolean {
-		return this._isAuthorized;
-    }
+	public get isConnected(): boolean {
+		return this._connection?.state === HubConnectionState.Connected;
+	}
 
-    constructor(client: PamelloClient) {
+	public get isAuthorized(): boolean {
+		return !!this._authorizedUser;
+	}
+
+	constructor(client: PamelloClient) {
+		super();
+
 		this._client = client;
 
 		this._connection = null;
 
-		this._isAuthorized = false;
-    }
+		this._authorizedUser = null;
+	}
 
-    public async connectAsync(): Promise<HubConnectionState> {
-        if (!this._client.config.baseUrl) {
-            throw new Error("PamelloException: Base URL is not set");
-        }
+	public async connectAsync(isAutomatic: boolean): Promise<HubConnectionState> {
+		if (!this._client.config.baseUrl) {
+			throw new Error("PamelloException: Base URL is not set");
+		}
 
-        this._connection = new HubConnectionBuilder()
-            .withUrl(`${this._client.config.baseUrl}/Signal`, {
-                transport: HttpTransportType.WebSockets,
-                skipNegotiation: true
-            })
-            .build();
+		this._connection = new HubConnectionBuilder()
+			.withUrl(`${this._client.config.baseUrl}/Signal`, {
+				transport: HttpTransportType.WebSockets,
+				skipNegotiation: true
+			})
+			.build();
 
-        this._connection.on("Event", (eventDto: ReceivedEventJsonDto) => this.onEvent(eventDto));
-        this._connection.onclose(() => this._client.disconnectAsync(true))
+		//maybe just pass that onEvent here
+		this._connection.on("Event", (eventDto: ReceivedEventJsonDto) => this.onEvent(eventDto));
+		this._connection.onclose(() => {
+			this._client.disconnectAsync(true)
+		})
 
-        await this._connection.start();
+		try {
+			await this._connection.start();
+		}
+		catch (e) {
+			await this._connection.stop();
+			this._connection = null;
+			
+			throw e;
+		}
 
-        return this._connection.state;
-    }
+		if (this.isConnected) this.emit("onConnected", isAutomatic);
 
-    private onEvent(eventDto: ReceivedEventJsonDto): void {
-        console.log("Received event:");
-        console.log(eventDto);
+		return this._connection.state;
+	}
 
-        this._client.events.invoke(eventDto);
-    }
+	private onEvent(eventDto: ReceivedEventJsonDto): void {
+		console.log("Received event:");
+		console.log(eventDto);
 
-    public async authorizeAsync(): Promise<void> {
-        if (!this._client.config.token) {
-            throw new Error("PamelloException: Token is not set");
-        }
+		this._client.events.invoke(eventDto);
+	}
+
+	public async authorizeAsync(isAutomatic: boolean): Promise<void> {
+		if (!this._client.config.token) {
+			throw new Error("PamelloException: Token is not set");
+		}
 
 		try {
 			await this.connection.invoke("Authorize", this._client.config.token);
-			this._isAuthorized = true;
+			this._authorizedUser = await this._client.peql.getSingleAsync(RemoteUser, "me");
+
+			if (this._authorizedUser) this.emit("onAuthrorized", isAutomatic);
 		}
 		catch (x) {
-			this._isAuthorized = false;
+			this._authorizedUser = null;
 			throw x;
 		}
-    }
+	}
 
-    public async unauthorizeAsync(): Promise<void> {
-        if (!this._isAuthorized) return;
+	public async unauthorizeAsync(isAutomatic: boolean): Promise<void> {
+		console.log(`unauthorizing ${this.isAuthorized}`);
+		if (!this.isAuthorized) return;
 
-		this._isAuthorized = false;
-		await this.connection.invoke("Unauthorize");
-    }
+		try {
+			this._authorizedUser = null;
 
-    public async disconnectAsync(): Promise<void> {
-        if (!this._connection) return;
+			if (this.isConnected) await this.connection.invoke("Unauthorize");
+		}
+		finally {
+			this._client.config.token = null;
+		}
 
-		this._isAuthorized = false;
+		this.emit("onUnauthrorized", isAutomatic);
+	}
 
-        await this._connection.stop();
+	public async disconnectAsync(isAutomatic: boolean): Promise<void> {
+		if (!this._connection) return;
 
-        this._connection = null;
-    }
+		try {
+			await this._connection.stop();
+		}
+		finally {
+			this._connection = null;
+		}
 
-    public async sendMessage(message: string): Promise<void> {
-        await this.connection.invoke("Message", message);
-    }
+		this.emit("onDisconnected", isAutomatic);
+	}
 
-    public async executeCommandPathAsync(commandPath: string): Promise<string> {
-        const result = await this.connection.invoke<any>("Command", commandPath);
+	public async sendMessage(message: string): Promise<void> {
+		await this.connection.invoke("Message", message);
+	}
 
-        if (result !== null && result !== undefined) {
-            return typeof result === "object" ? JSON.stringify(result) : String(result);
-        }
+	public async executeCommandPathAsync(commandPath: string): Promise<string> {
+		const result = await this.connection.invoke<any>("Command", commandPath);
 
-        return "";
-    }
+		if (result !== null && result !== undefined) {
+			return typeof result === "object" ? JSON.stringify(result) : String(result);
+		}
 
-    public async executeCommandPathAsyncT<TType>(commandPath: string): Promise<TType> {
-        return this.connection.invoke<TType>("Command", commandPath);
-    }
+		return "";
+	}
+
+	public async executeCommandPathAsyncT<TType>(commandPath: string): Promise<TType> {
+		return this.connection.invoke<TType>("Command", commandPath);
+	}
 }

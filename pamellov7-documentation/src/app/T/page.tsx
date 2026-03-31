@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 export default function Home() {
 	const connected = useConnectionState();
 	const authorized = useAuthorizationState();
-	const [attemptCount, setAttemptCount] = useState(-1);
 
 	const [urlInputValue, setUrlInput] = useState("https://server.tpamello.marsoau.com");
 	const [tokenInputValue, setTokenInput] = useState("9a40ad25-7e80-43c1-bdd9-a7a84218db5d");
@@ -14,12 +13,8 @@ export default function Home() {
 	const pamello = usePamello();
 
 	const user = useUser("me");
-	const player = usePlayer(user?.Dto.SelectedPlayerId ?? 0);
-	const song = useSong(player?.Dto.Queue.CurrentSongId ?? 0);
-
-	const startAttempts = () => {
-		pamello.startConnectionAttemptsAsync(urlInputValue);
-	}
+	const player = usePlayer(user?.Dto.SelectedPlayer ?? 0);
+	const song = useSong(player?.Dto.Queue.CurrentSong ?? 0);
 
 	const connect = () => {
 		pamello.connectAsync(urlInputValue);
@@ -35,16 +30,10 @@ export default function Home() {
 		pamello.unauthorizeAsync();
 	}
 
-	useEffect(() => {
-		pamello.on("onFailedAttempt", (e, attempt) => {
-			setAttemptCount(attempt);
-		});
-	}, [])
-
 	return <div>
 		<div>{user?.Name ?? "NOUSER"}</div>
-		<div>{player?.Dto.Name ?? "NOPLAYEr"}</div>
-		<div>{song?.Dto.Name ?? "NOsong"}</div>
+		<div>{player?.Name ?? "NOPLAYEr"}</div>
+		<div>{song?.Name ?? "NOsong"}</div>
 		{player && <div>
 			{player.Dto.Queue.CurrentSongTimePassed} : {player.Dto.Queue.CurrentSongTimeTotal}
 		</div>}
@@ -59,12 +48,6 @@ export default function Home() {
 			<button
 				onClick={connect}
 			>connect</button>
-		</div>
-		<div>
-			attempt count: {attemptCount}
-			<button
-				onClick={startAttempts}
-			>start</button>
 		</div>
 		<div>
 			<button

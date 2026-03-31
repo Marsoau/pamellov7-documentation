@@ -1,5 +1,5 @@
 export class PamelloQueueDto {
-    CurrentSongId?: number | null;
+    CurrentSong?: number | null;
     CurrentSongTimePassed!: number;
     CurrentSongTimeTotal!: number;
     Entries!: PamelloQueueEntryDto[];
