@@ -48,6 +48,8 @@ export abstract class RemoteRepository<TEntityType extends IRemoteEntity> {
     public async getSingleAsync(query: string): Promise<TEntityType | null>;
     public async getSingleAsync(idOrQuery: number | string): Promise<TEntityType | null> {
         if (typeof idOrQuery === 'number') {
+			if (idOrQuery == 0) return null;
+
             const entity = this.getSingle(idOrQuery);
             if (entity) return entity;
 
@@ -62,6 +64,8 @@ export abstract class RemoteRepository<TEntityType extends IRemoteEntity> {
     }
 
     public async getAsync(query: string): Promise<TEntityType[]> {
+		if (!query) return [];
+
         const results = await this._requests.getEntitiesAsync(this.dtoType, `${this.providerName}$${query}`);
         return results.map(dto => this.load(dto));
     }
